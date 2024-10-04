@@ -1,8 +1,7 @@
-version: '3.9'
 services:
   pihole:
     container_name: pihole
-    image: pihole/pihole:2023.03.1 # <- update image version here, see: https://github.com/pi-hole/docker-pi-hole/releases
+    image: pihole/pihole:latest # <- update image version here, see: https://github.com/pi-hole/docker-pi-hole/releases
     hostname: pihole.local
     depends_on:
       - unbound
@@ -14,20 +13,20 @@ services:
         reservations:
           memory: 256M
     ports:
-      - "8080:80/tcp" # web ui -> http://localhost:8080/admin
+      - "80:80/tcp" # web ui -> http://localhost:8080/admin
       - "53:53/tcp" # DNS tcp port is used as fallback for longer dns messages
       - "53:53/udp" # DNS port
-# RECOMMENDED: Uncomment and adapt if you want to persist pihole configurations after restart
-#    volumes:
-#      - "/var/lib/docker/volumes/pihole/pihole:/etc/pihole/"
-#      - "/var/lib/docker/volumes/pihole/dnsmasq.d:/etc/dnsmasq.d/"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - "./conf/pihole/:/etc/pihole/"
+      - "./conf/dnsmasq.d/:/etc/dnsmasq.d/"
     environment:
       WEBPASSWORD: ${WEBPASSWORD}
       FTLCONF_LOCAL_IPV4: ${HOST_IP_V4_ADDRESS} # <-- match ipv4_address of host
       TZ: ${TIMEZONE}
       PIHOLE_DNS_: 172.21.200.3#53 # forward to unbound
       DNSSEC: true
-      WEBTHEME: default-light
+      WEBTHEME: default-dark
     dns:
       - 127.0.0.1
       - 9.9.9.9 # Quad9
@@ -40,9 +39,14 @@ services:
     container_name: unbound
     hostname: unbound.local
     restart: unless-stopped
+    environment:
+      TZ: ${TIMEZONE}
     ports:
       - "5335:53/tcp" # expose a different port (5335) so you can use it directly
       - "5335:53/udp"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - "./conf/unbound/:/opt/unbound/etc/unbound/"
     networks:
       pihole_dns_network:
         ipv4_address: 172.21.200.3 # <-- this is used by pihole as upstream DNS
@@ -56,4 +60,4 @@ networks:
       config:
         - subnet: 172.21.200.0/24
           gateway: 172.21.200.1
-          ip_range: 172.21.200.1/24 # 172.21.200.1 - 172.21.200.254
+          ip_range: 172.21.200.0/24 # 172.21.200.1 - 172.21.200.254
