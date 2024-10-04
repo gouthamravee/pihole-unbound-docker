@@ -1,3 +1,7 @@
 .idea
 *.iml
 conf/pihole/*
+conf/unbound/dev
+conf/unbound/var
+*.pid
+
