@@ -4,4 +4,4 @@ conf/pihole/*
 conf/unbound/dev
 conf/unbound/var
 *.pid
-
+conf/dnsmasq.d/01-pihole.conf
